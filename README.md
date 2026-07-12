@@ -85,4 +85,21 @@ npm run dev
 
 ---
 
+## Technology Stack
+
+### Frontend (Central Orchestration)
+* **Framework**: React 18, Vite (for optimized builds and HMR)
+* **Styling**: Vanilla CSS with strict variable design tokens (CSS Grid/Flexbox)
+* **PDF Generation**: `html2pdf.js` (DOM-to-Canvas rendering)
+* **Cryptography / Verification**: `qrcode.react` (SVG-based non-tamper QR signatures)
+
+### Backend (AI Microservices)
+* **Framework**: FastAPI (Python 3.10+) for async API orchestration
+* **Computer Vision**: OpenCV (Frame extraction), RetinaFace (Localization), PyTorch (CNN/LSTM ensembles)
+* **Audio Processing**: Librosa (MFCC extraction, Resampling), TensorFlow/Keras (1D-CNN temporal analysis)
+* **NLP & Text**: HuggingFace Transformers (BERT/RoBERTa) for Mail/Social intent classification
+* **Security & Auth**: JWT (JSON Web Tokens), Cryptographic Hash (SHA-256 for Verify signatures)
+
+---
+
 *System Architect: Jonah | NUNM.AI © 2026*
