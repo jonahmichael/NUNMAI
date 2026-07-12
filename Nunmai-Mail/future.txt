@@ -1,0 +1,16 @@
+🔲 Remaining:
+Phase
+Task
+Next
+Test classifier.py output, confirm predictions are sensible
+Next
+Attachment analysis (dangerous extensions, double-extension detection)
+Next
+Lightweight sender-verification stub (local trusted-domain check)
+Then
+FastAPI serving layer (main.py) — turn model into a callable endpoint
+Then
+tests/test_features.py — automated regression tests
+Later
+Domain-age (WHOIS) lookups, redirect-chain analysis, transformer-model upgrade
+

@@ -1,0 +1,19 @@
+# ============================================================
+# NUNMAI-SOCIAL — Python dependencies
+# ============================================================
+# Image processing (for attached post images)
+pillow>=10.0.0
+
+# Pretrained image forensics model (SigLIP2, reused from NUNMAI-VISION)
+torch>=2.2.0
+transformers>=4.40.0
+
+# API serving layer
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.6.0
+python-multipart>=0.0.9
+
+# Testing
+pytest>=8.0.0
+

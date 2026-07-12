@@ -1,0 +1,6 @@
+sample.wav is actually fake data
+
+data was taken from "https://www.kaggle.com/datasets/kambingbersayaphitam/speech-dataset-of-human-and-ai-generated-voices"
+
+margot-original - REAL
+margot-to-biden = FAKE
