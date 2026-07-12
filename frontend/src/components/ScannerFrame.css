@@ -1,0 +1,28 @@
+.scanner-container {
+  position: relative;
+  overflow: hidden;
+  border: 1px dashed var(--fg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.scanner-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--fg-primary);
+  box-shadow: var(--glow);
+  animation: scan 2s linear infinite;
+}
+
+@keyframes scan {
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}

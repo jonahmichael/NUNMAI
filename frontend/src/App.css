@@ -55,3 +55,15 @@
 .gap-lg {
   gap: 20px;
 }
+
+.nav-btn {
+  text-align: left;
+  font-weight: bold;
+  padding: 2px 0;
+}
+
+.nav-btn:hover {
+  background-color: var(--fg-primary);
+  color: var(--bg-color);
+}
+
