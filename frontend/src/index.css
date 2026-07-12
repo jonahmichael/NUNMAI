@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg-color: #0a0a0a;
+  --fg-primary: #33ff00;
+  --fg-secondary: #ffb000;
+  --fg-muted: #1f521f;
+  --fg-error: #ff3333;
+  --border-color: #1f521f;
+  --glow: 0 0 5px rgba(51, 255, 0, 0.5);
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background-color: var(--bg-color);
+  color: var(--fg-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  text-transform: uppercase;
+}
+
+body::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 2;
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+}
+
+/* Base element styles */
+h1, h2, h3, h4, h5, h6, p, span, div {
+  text-shadow: var(--glow);
+}
+
+a {
+  color: var(--fg-secondary);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  background: transparent;
+  color: var(--fg-primary);
+  border: none;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  text-transform: uppercase;
+}
+button:hover {
+  background: var(--fg-primary);
+  color: var(--bg-color);
+}
+
+input, textarea {
+  background: transparent;
+  border: none;
+  color: var(--fg-primary);
+  font-family: var(--font-mono);
+  outline: none;
+  text-transform: uppercase;
+}
+
+::selection {
+  background: var(--fg-primary);
+  color: var(--bg-color);
+}
+
+/* Animations */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}

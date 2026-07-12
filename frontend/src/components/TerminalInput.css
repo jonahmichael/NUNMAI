@@ -1,0 +1,40 @@
+.terminal-input-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  cursor: text;
+  position: relative;
+}
+
+.terminal-prompt {
+  color: var(--fg-secondary);
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.input-display {
+  display: flex;
+  align-items: center;
+  color: var(--fg-primary);
+  white-space: pre;
+}
+
+.cursor {
+  color: var(--fg-primary);
+  font-size: 1.1em;
+  margin-left: 2px;
+}
+
+.hidden-input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

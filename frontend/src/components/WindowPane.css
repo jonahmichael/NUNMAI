@@ -1,0 +1,35 @@
+.window-pane {
+  border: 1px solid var(--border-color);
+  background-color: rgba(10, 10, 10, 0.8);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.window-header {
+  border-bottom: 1px dashed var(--border-color);
+  padding: 4px 8px;
+  font-weight: bold;
+  color: var(--fg-secondary);
+}
+
+.window-content {
+  padding: 10px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Custom scrollbar for window content */
+.window-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.window-content::-webkit-scrollbar-track {
+  background: var(--bg-color);
+  border-left: 1px solid var(--border-color);
+}
+
+.window-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+}
