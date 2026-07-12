@@ -13,19 +13,19 @@ export const MailForm = ({ onSubmit, isScanning }) => {
   };
 
   return (
-    <div className="flex-col gap-md" style={{ height: '100%', overflowY: 'auto' }}>
+    <div className="flex-col gap-md" style={{ display: 'flex', flexDirection: 'column' }}>
       <div style={{ color: 'var(--fg-secondary)' }}>POST /scan-email</div>
       <textarea 
         placeholder="Paste raw_email_source (headers + body)..." 
         value={rawEmail} 
         onChange={e => setRawEmail(e.target.value)}
-        style={{ flex: 1, minHeight: '80px', resize: 'none', background: 'rgba(0,0,0,0.3)' }}
+        style={{ height: '100px', resize: 'vertical', background: 'rgba(0,0,0,0.3)' }}
       />
       <textarea 
         placeholder="Paste plain body_text (optional)..." 
         value={bodyText} 
         onChange={e => setBodyText(e.target.value)}
-        style={{ flex: 1, minHeight: '80px', resize: 'none', background: 'rgba(0,0,0,0.3)' }}
+        style={{ height: '100px', resize: 'vertical', background: 'rgba(0,0,0,0.3)' }}
       />
       
       <div style={{ padding: '10px', background: 'rgba(0,0,0,0.3)' }}>
@@ -76,7 +76,7 @@ export const VisionVoiceForm = ({ type, onSubmit, isScanning }) => {
               autoPlay 
               loop 
               muted 
-              style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', opacity: 0.5 }}
             />
           ) : (
             <label style={{ cursor: 'pointer', color: 'var(--fg-primary)', textAlign: 'center', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -112,7 +112,7 @@ export const SocialForm = ({ onSubmit, isScanning }) => {
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   return (
-    <div className="flex-col gap-md" style={{ height: '100%', overflowY: 'auto' }}>
+    <div className="flex-col gap-md" style={{ display: 'flex', flexDirection: 'column' }}>
       <div style={{ color: 'var(--fg-secondary)' }}>POST /scan-post</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
         <input name="handle" placeholder="@handle" onChange={handleChange} />

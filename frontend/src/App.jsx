@@ -10,7 +10,7 @@ import { MailForm, VisionVoiceForm, SocialForm } from './components/IngestionFor
 
 function App() {
   const [history, setHistory] = useState([
-    { type: 'system', text: 'NUNMI OS v3.0.0 initializing...' },
+    { type: 'system', text: 'NUNM.AI OS v3.0.0 initializing...' },
     { type: 'system', text: 'Connecting to CENTRAL ORCHESTRATION API... [OK]' },
     { type: 'system', text: 'Select a module from the Navigation to begin ingestion.' }
   ]);
@@ -157,7 +157,7 @@ function App() {
     const element = reportRef.current;
     const opt = {
       margin:       0.5,
-      filename:     'NUNMI_Threat_Report.pdf',
+      filename:     'NUNM.AI_Threat_Report.pdf',
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#1e1e1e' },
       jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -169,7 +169,7 @@ function App() {
   };
 
   const qrPayload = JSON.stringify({
-    app: "NUNMI",
+    app: "NUNM.AI",
     user: "Jonah",
     risk_score: 87,
     status: "VERIFIED",
@@ -194,7 +194,7 @@ function App() {
       <div className="header-pane">
         <div style={{ flex: 1 }}></div>
         <div style={{ flex: 1, textAlign: 'center', fontSize: '1.5em', fontWeight: 'bold' }}>
-          <span>NUNMI</span>
+          <span>NUNM.AI</span>
         </div>
         <div className="flex-row gap-lg" style={{ color: 'var(--fg-secondary)', flex: 1, justifyContent: 'flex-end' }}>
           <span>MAIL [{pipelineState.mail === 'ANALYZED' ? 'OK' : 'WAIT'}]</span>
@@ -235,11 +235,11 @@ function App() {
       {/* Main Center Area */}
       <div className="main-pane">
         {currentView === 'ingest' ? (
-          <div className="flex-row gap-md" style={{ flex: 1 }}>
-            <WindowPane title={`DATA INGESTION: ${activeContext.toUpperCase()}`} style={{ flex: 2 }}>
+          <div className="flex-row gap-md" style={{ flex: 1, minHeight: 0 }}>
+            <WindowPane title={`DATA INGESTION: ${activeContext.toUpperCase()}`} style={{ flex: 2, minHeight: 0 }}>
               {renderActiveForm()}
             </WindowPane>
-            <WindowPane title="MODULE INFO" style={{ flex: 1 }}>
+            <WindowPane title="MODULE INFO" style={{ flex: 1, minHeight: 0 }}>
               <div style={{ color: 'var(--fg-muted)' }}>
                 {activeContext === 'mail' && "Requires raw_email_source for proper SPF/DKIM parsing. Attachments scanned via static analysis."}
                 {activeContext === 'vision' && "Accepts .mp4. Buffers into memory (20s) and chunks frames sequentially (30s) for deepfake detection."}
@@ -257,7 +257,7 @@ function App() {
                     <div style={{ textAlign: 'center', marginTop: '10px' }}>
                       <TypewriterText text="VALID SIGNATURE GENERATED" delay={40} />
                       <br />
-                      <span style={{ fontSize: '0.8em', color: 'var(--fg-secondary)' }}>NUNMI-VERIFY HASH: 0x8F9B2A...E4</span>
+                      <span style={{ fontSize: '0.8em', color: 'var(--fg-secondary)' }}>NUNM.AI-VERIFY HASH: 0x8F9B2A...E4</span>
                     </div>
                   </div>
                 </WindowPane>
@@ -303,7 +303,7 @@ function App() {
               ))}
               <div ref={terminalEndRef} style={{ height: '1px' }} />
             </div>
-            <TerminalInput prompt={activeContext ? `[${activeContext.toUpperCase()}] >` : `root@nunmi:~$`} onSubmit={(cmd) => logToTerminal(`root@nunmi:~$ ${cmd}`, 'user')} />
+            <TerminalInput prompt={activeContext ? `[${activeContext.toUpperCase()}] >` : `root@nunm.ai:~$`} onSubmit={(cmd) => logToTerminal(`root@nunm.ai:~$ ${cmd}`, 'user')} />
           </div>
         </WindowPane>
       </div>
