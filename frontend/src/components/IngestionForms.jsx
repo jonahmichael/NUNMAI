@@ -1,27 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ScannerFrame from './ScannerFrame';
 
 export const MailForm = ({ onSubmit, isScanning }) => {
   const [rawEmail, setRawEmail] = useState('');
   const [bodyText, setBodyText] = useState('');
+  const [attachment, setAttachment] = useState(null);
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setAttachment(e.target.files[0]);
+    }
+  };
 
   return (
-    <div className="flex-col gap-md" style={{ height: '100%' }}>
+    <div className="flex-col gap-md" style={{ height: '100%', overflowY: 'auto' }}>
       <div style={{ color: 'var(--fg-secondary)' }}>POST /scan-email</div>
       <textarea 
         placeholder="Paste raw_email_source (headers + body)..." 
         value={rawEmail} 
         onChange={e => setRawEmail(e.target.value)}
-        style={{ flex: 1, minHeight: '100px', resize: 'none', background: 'rgba(0,0,0,0.3)' }}
+        style={{ flex: 1, minHeight: '80px', resize: 'none', background: 'rgba(0,0,0,0.3)' }}
       />
       <textarea 
         placeholder="Paste plain body_text (optional)..." 
         value={bodyText} 
         onChange={e => setBodyText(e.target.value)}
-        style={{ flex: 1, minHeight: '100px', resize: 'none', background: 'rgba(0,0,0,0.3)' }}
+        style={{ flex: 1, minHeight: '80px', resize: 'none', background: 'rgba(0,0,0,0.3)' }}
       />
+      
+      <div style={{ padding: '10px', background: 'rgba(0,0,0,0.3)' }}>
+        <div style={{ marginBottom: '5px', color: 'var(--fg-muted)' }}>ATTACHMENT (OPTIONAL PDF/DOC)</div>
+        <input type="file" onChange={handleFileChange} disabled={isScanning} style={{ colorScheme: 'dark' }} />
+      </div>
+
       <button 
-        onClick={() => onSubmit({ rawEmail, bodyText })}
+        onClick={() => onSubmit({ rawEmail, bodyText, attachment })}
         disabled={isScanning}
         style={{ border: '1px solid var(--fg-primary)', padding: '5px' }}
       >
@@ -33,28 +46,52 @@ export const MailForm = ({ onSubmit, isScanning }) => {
 
 export const VisionVoiceForm = ({ type, onSubmit, isScanning }) => {
   const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const selected = e.target.files[0];
+      setFile(selected);
+      if (type === 'VISION' && selected.type.startsWith('video/')) {
+        setPreviewUrl(URL.createObjectURL(selected));
+      }
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   return (
     <div className="flex-col gap-md" style={{ height: '100%' }}>
       <div style={{ color: 'var(--fg-secondary)' }}>POST /scan-{type === 'VISION' ? 'video' : 'audio'}</div>
-      <div 
-        onDragOver={e => e.preventDefault()} 
-        onDrop={handleDrop}
-        style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
-      >
-        <ScannerFrame isScanning={isScanning}>
-          <div style={{ padding: '20px', textAlign: 'center', color: file ? 'var(--fg-primary)' : 'var(--fg-muted)' }}>
-            {file ? `[FILE LOADED] ${file.name}` : `DRAG & DROP ${type} FILE HERE`}
-          </div>
-        </ScannerFrame>
-      </div>
+      
+      <ScannerFrame isScanning={isScanning}>
+        <div style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '150px', width: '100%', position: 'relative', justifyContent: 'center', alignItems: 'center' }}>
+          {previewUrl ? (
+            <video 
+              src={previewUrl} 
+              autoPlay 
+              loop 
+              muted 
+              style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }}
+            />
+          ) : (
+            <label style={{ cursor: 'pointer', color: 'var(--fg-primary)', textAlign: 'center', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <input type="file" accept={type === 'VISION' ? 'video/*' : 'audio/*'} style={{ display: 'none' }} onChange={handleFileChange} />
+              {file ? `[FILE LOADED] ${file.name}` : `CLICK TO BROWSE & UPLOAD ${type}`}
+            </label>
+          )}
+          {previewUrl && (
+            <div style={{ position: 'absolute', background: 'rgba(0,0,0,0.7)', padding: '5px' }}>
+              {file.name}
+            </div>
+          )}
+        </div>
+      </ScannerFrame>
+
       <button 
         onClick={() => onSubmit({ file })}
         disabled={isScanning || !file}
@@ -88,7 +125,10 @@ export const SocialForm = ({ onSubmit, isScanning }) => {
       <textarea name="bio_text" placeholder="Account bio..." onChange={handleChange} style={{ height: '60px', background: 'rgba(0,0,0,0.3)' }} />
       
       <ScannerFrame isScanning={isScanning}>
-        <div style={{ padding: '10px', color: 'var(--fg-muted)' }}>OPTIONAL IMAGE UPLOAD ZONE</div>
+        <label style={{ padding: '10px', color: 'var(--fg-muted)', cursor: 'pointer', textAlign: 'center', width: '100%' }}>
+          <input type="file" accept="image/*" style={{ display: 'none' }} />
+          CLICK TO ATTACH OPTIONAL IMAGE
+        </label>
       </ScannerFrame>
 
       <button 
