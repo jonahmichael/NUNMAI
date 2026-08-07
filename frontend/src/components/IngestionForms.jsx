@@ -1,45 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import ScannerFrame from './ScannerFrame';
 
-export const MailForm = ({ onSubmit, isScanning }) => {
+export const MailForm = ({ onSubmit, isScanning, activeVerdict }) => {
   const [rawEmail, setRawEmail] = useState('');
-  const [bodyText, setBodyText] = useState('');
-  const [attachment, setAttachment] = useState(null);
+  const [bodyText, setBodyText] = useState(''); // Kept for compatibility
 
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setAttachment(e.target.files[0]);
+  // Replaces the textarea with a div highlighting the triggered words
+  const renderHighlighted = () => {
+    let text = rawEmail;
+    if (activeVerdict && activeVerdict.textMatches) {
+        let allMatches = [];
+        Object.values(activeVerdict.textMatches).forEach(arr => {
+            allMatches = allMatches.concat(arr);
+        });
+        
+        // Deduplicate
+        allMatches = [...new Set(allMatches)];
+        
+        if (allMatches.length > 0) {
+            // Escape regex special characters from match words just in case
+            const escapedMatches = allMatches.map(m => m.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+            const regex = new RegExp(`\\b(${escapedMatches.join('|')})\\b`, 'gi');
+            const parts = text.split(regex);
+            
+            return (
+                <div className="friendly-input" style={{ height: '250px', overflowY: 'auto', whiteSpace: 'pre-wrap', backgroundColor: '#000', color: 'var(--fg-secondary)', border: '1px solid var(--fg-error)', cursor: 'default' }}>
+                    {parts.map((part, i) => {
+                        if (allMatches.some(m => m.toLowerCase() === part.toLowerCase())) {
+                            return <span key={i} style={{ color: '#ff4444', textDecoration: 'underline', fontWeight: 'bold' }}>{part}</span>;
+                        }
+                        return part;
+                    })}
+                </div>
+            );
+        }
     }
+    // Fallback if no specific word matches but scan is complete
+    return <div className="friendly-input" style={{ height: '250px', overflowY: 'auto', whiteSpace: 'pre-wrap', cursor: 'default' }}>{rawEmail}</div>;
   };
 
   return (
-    <div className="flex-col gap-md" style={{ display: 'flex', flexDirection: 'column' }}>
-      <div style={{ color: 'var(--fg-secondary)' }}>POST /scan-email</div>
-      <textarea 
-        placeholder="Paste raw_email_source (headers + body)..." 
-        value={rawEmail} 
-        onChange={e => setRawEmail(e.target.value)}
-        style={{ height: '100px', resize: 'vertical', background: 'rgba(0,0,0,0.3)' }}
-      />
-      <textarea 
-        placeholder="Paste plain body_text (optional)..." 
-        value={bodyText} 
-        onChange={e => setBodyText(e.target.value)}
-        style={{ height: '100px', resize: 'vertical', background: 'rgba(0,0,0,0.3)' }}
-      />
-      
-      <div style={{ padding: '10px', background: 'rgba(0,0,0,0.3)' }}>
-        <div style={{ marginBottom: '5px', color: 'var(--fg-muted)' }}>ATTACHMENT (OPTIONAL PDF/DOC)</div>
-        <input type="file" onChange={handleFileChange} disabled={isScanning} style={{ colorScheme: 'dark' }} />
+    <div className="flex-col gap-md">
+      <div className="guided-subtitle">
+        {activeVerdict 
+          ? "Scan complete. Specific risk factors (like urgency or financial triggers) are highlighted below:" 
+          : "Paste the email below. We'll check the sender, links, and language for phishing signs."}
       </div>
-
-      <button 
-        onClick={() => onSubmit({ rawEmail, bodyText, attachment })}
-        disabled={isScanning}
-        style={{ border: '1px solid var(--fg-primary)', padding: '5px' }}
-      >
-        [ SUBMIT PAYLOAD ]
-      </button>
+      
+      {activeVerdict ? (
+        renderHighlighted()
+      ) : (
+        <textarea 
+          className="friendly-input"
+          placeholder="Paste full email here..." 
+          value={rawEmail} 
+          onChange={e => setRawEmail(e.target.value)}
+          style={{ height: '150px', resize: 'vertical' }}
+        />
+      )}
+      
+      {!activeVerdict && (
+        <button 
+          className="friendly-button"
+          onClick={() => onSubmit({ rawEmail, bodyText: rawEmail })}
+          disabled={isScanning}
+        >
+          Check This Email
+        </button>
+      )}
     </div>
   );
 };
@@ -64,12 +92,18 @@ export const VisionVoiceForm = ({ type, onSubmit, isScanning }) => {
     };
   }, [previewUrl]);
 
+  const subtitle = type === 'VISION' 
+    ? "Upload a video. We'll analyze it frame-by-frame for deepfake artifacts."
+    : "Upload an audio clip. We'll analyze the voice frequencies for AI cloning signatures.";
+
+  const buttonText = type === 'VISION' ? "Scan Video" : "Scan Audio";
+
   return (
     <div className="flex-col gap-md" style={{ height: '100%' }}>
-      <div style={{ color: 'var(--fg-secondary)' }}>POST /scan-{type === 'VISION' ? 'video' : 'audio'}</div>
+      <div className="guided-subtitle">{subtitle}</div>
       
       <ScannerFrame isScanning={isScanning}>
-        <div style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '150px', width: '100%', position: 'relative', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '200px', width: '100%', position: 'relative', justifyContent: 'center', alignItems: 'center' }}>
           {previewUrl ? (
             <video 
               src={previewUrl} 
@@ -81,7 +115,7 @@ export const VisionVoiceForm = ({ type, onSubmit, isScanning }) => {
           ) : (
             <label style={{ cursor: 'pointer', color: 'var(--fg-primary)', textAlign: 'center', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <input type="file" accept={type === 'VISION' ? 'video/*' : 'audio/*'} style={{ display: 'none' }} onChange={handleFileChange} />
-              {file ? `[FILE LOADED] ${file.name}` : `CLICK TO BROWSE & UPLOAD ${type}`}
+              {file ? `File Selected: ${file.name}` : `Click to Browse & Upload`}
             </label>
           )}
           {previewUrl && (
@@ -93,11 +127,11 @@ export const VisionVoiceForm = ({ type, onSubmit, isScanning }) => {
       </ScannerFrame>
 
       <button 
+        className="friendly-button"
         onClick={() => onSubmit({ file })}
         disabled={isScanning || !file}
-        style={{ border: '1px solid var(--fg-primary)', padding: '5px', opacity: file ? 1 : 0.5 }}
       >
-        [ SUBMIT PAYLOAD ]
+        {buttonText}
       </button>
     </div>
   );
@@ -112,31 +146,30 @@ export const SocialForm = ({ onSubmit, isScanning }) => {
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   return (
-    <div className="flex-col gap-md" style={{ display: 'flex', flexDirection: 'column' }}>
-      <div style={{ color: 'var(--fg-secondary)' }}>POST /scan-post</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-        <input name="handle" placeholder="@handle" onChange={handleChange} />
-        <input name="account_created_date" type="date" onChange={handleChange} style={{ colorScheme: 'dark' }} />
-        <input name="followers" placeholder="Followers count" type="number" onChange={handleChange} />
-        <input name="following" placeholder="Following count" type="number" onChange={handleChange} />
-        <input name="posts_per_day" placeholder="Posts per day" type="number" onChange={handleChange} />
+    <div className="flex-col gap-md">
+      <div className="guided-subtitle">
+        Enter the social media post and account details. We'll check for bot activity and manipulation.
       </div>
-      <textarea name="post_text" placeholder="Post caption/body..." onChange={handleChange} style={{ height: '60px', background: 'rgba(0,0,0,0.3)' }} />
-      <textarea name="bio_text" placeholder="Account bio..." onChange={handleChange} style={{ height: '60px', background: 'rgba(0,0,0,0.3)' }} />
       
-      <ScannerFrame isScanning={isScanning}>
-        <label style={{ padding: '10px', color: 'var(--fg-muted)', cursor: 'pointer', textAlign: 'center', width: '100%' }}>
-          <input type="file" accept="image/*" style={{ display: 'none' }} />
-          CLICK TO ATTACH OPTIONAL IMAGE
-        </label>
-      </ScannerFrame>
-
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+        <input className="friendly-input" name="handle" placeholder="@username" onChange={handleChange} />
+        <input className="friendly-input" name="followers" placeholder="Followers count" type="number" onChange={handleChange} />
+      </div>
+      
+      <textarea 
+        className="friendly-input" 
+        name="post_text" 
+        placeholder="Paste the post caption or text here..." 
+        onChange={handleChange} 
+        style={{ height: '80px', resize: 'vertical' }} 
+      />
+      
       <button 
+        className="friendly-button"
         onClick={() => onSubmit(formData)}
         disabled={isScanning}
-        style={{ border: '1px solid var(--fg-primary)', padding: '5px' }}
       >
-        [ SUBMIT PAYLOAD ]
+        Check Social Post
       </button>
     </div>
   );
