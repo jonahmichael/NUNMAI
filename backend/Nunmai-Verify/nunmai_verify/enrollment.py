@@ -18,6 +18,8 @@ def enroll_entity(
     domains: list[str] | None = None,
     phones: list[str] | None = None,
     handles: list[tuple[str, str]] | None = None,  # [(platform, handle), ...]
+    authorized_by_id: int | None = None,
+    executives: list[str] | None = None,
 ) -> dict:
     """Register a new entity: generates a fresh keypair and stores any
     domains/phones/handles supplied at enrollment time. Returns the new
@@ -30,9 +32,9 @@ def enroll_entity(
     with get_conn() as conn:
         cur = conn.execute(
             """INSERT INTO entities (entity_name, entity_type, registration_number,
-                                      public_key_pem, private_key_pem)
-               VALUES (?, ?, ?, ?, ?)""",
-            (entity_name, entity_type, registration_number, public_pem, private_pem),
+                                      public_key_pem, private_key_pem, authorized_by_id)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (entity_name, entity_type, registration_number, public_pem, private_pem, authorized_by_id),
         )
         entity_id = cur.lastrowid
 
@@ -51,6 +53,11 @@ def enroll_entity(
                 """INSERT OR IGNORE INTO entity_handles (entity_id, platform, handle)
                    VALUES (?, ?, ?)""",
                 (entity_id, platform.lower().strip(), handle.lower().lstrip("@").strip()),
+            )
+        for exec_name in (executives or []):
+            conn.execute(
+                "INSERT OR IGNORE INTO entity_executives (entity_id, executive_name) VALUES (?, ?)",
+                (entity_id, exec_name.strip()),
             )
 
     return {"entity_id": entity_id, "entity_name": entity_name, "public_key_pem": public_pem}

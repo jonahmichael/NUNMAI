@@ -19,6 +19,7 @@ KNOWN_ENTITIES = [
         "registration_number": None,
         "domains": ["sebi.gov.in"],
         "handles": [("twitter", "SEBI_India")],
+        "executives": ["Madhabi Puri Buch", "Ananth Narayan G", "Ashwani Bhatia"],
     },
     {
         "entity_name": "National Stock Exchange of India (NSE)",
@@ -26,6 +27,7 @@ KNOWN_ENTITIES = [
         "registration_number": None,
         "domains": ["nseindia.com"],
         "handles": [("twitter", "NSEIndia")],
+        "executives": ["Ashishkumar Chauhan"],
     },
     {
         "entity_name": "BSE Limited",
@@ -75,22 +77,42 @@ KNOWN_ENTITIES = [
 def seed():
     init_db()
     created = []
+    
+    # Track SEBI's ID to use as the trust root for others
+    sebi_id = None
+    
     with get_conn() as conn:
         existing_domains = {r["domain"] for r in conn.execute("SELECT domain FROM entity_domains")}
 
     for entity in KNOWN_ENTITIES:
         if any(d in existing_domains for d in entity["domains"]):
             print(f"skip (already seeded): {entity['entity_name']}")
+            # If SEBI was already seeded, we still need its ID for the others
+            if entity["entity_name"] == "Securities and Exchange Board of India (SEBI)":
+                with get_conn() as conn:
+                    row = conn.execute("SELECT id FROM entities WHERE entity_name = ?", (entity["entity_name"],)).fetchone()
+                    if row:
+                        sebi_id = row["id"]
             continue
+            
+        is_sebi = entity["entity_name"] == "Securities and Exchange Board of India (SEBI)"
+        auth_id = None if is_sebi else sebi_id
+        
         result = enroll_entity(
             entity_name=entity["entity_name"],
             entity_type=entity["entity_type"],
             registration_number=entity["registration_number"],
             domains=entity["domains"],
             handles=entity.get("handles"),
+            executives=entity.get("executives"),
+            authorized_by_id=auth_id,
         )
+        
+        if is_sebi:
+            sebi_id = result["entity_id"]
+            
         created.append(result)
-        print(f"seeded: {entity['entity_name']} -> entity_id={result['entity_id']}")
+        print(f"seeded: {entity['entity_name']} -> entity_id={result['entity_id']} (auth_by={auth_id})")
 
     print(f"\n{len(created)} entities newly seeded.")
     return created

@@ -86,11 +86,13 @@ function App() {
         endpoint += '/vision/scan-video';
         const formData = new FormData();
         formData.append('file', payload.file);
+        if (payload.claimed_speaker_name) formData.append('claimed_speaker_name', payload.claimed_speaker_name);
         options.body = formData;
       } else if (module === 'VOICE') {
         endpoint += '/voice/scan-audio';
         const formData = new FormData();
         formData.append('file', payload.file);
+        if (payload.claimed_speaker_name) formData.append('claimed_speaker_name', payload.claimed_speaker_name);
         options.body = formData;
       } else if (module === 'SOCIAL') {
         endpoint += '/social/scan-post';
@@ -196,6 +198,17 @@ function App() {
       logToTerminal('PDF downloaded successfully.');
       setIsGenerating(false);
     });
+  };
+
+  const exportLogsToJSON = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "nunmai_system_logs.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    logToTerminal('Logs exported to JSON.');
   };
 
   const formatSignal = (feature) => {
@@ -310,17 +323,23 @@ function App() {
       );
     }
     
-    if (context === 'vision') {
+    if (context === 'voice') {
       return (
         <div className="flex-col gap-sm">
           <div>
-            <strong>Summary:</strong> Analyzed {rawData.num_faces_analyzed} face(s) across {rawData.num_frames_sampled} frames.
+            <strong>Summary:</strong> Analyzed {rawData.num_segments_analyzed} audio segments for synthetic frequencies.
           </div>
-          <div><strong>Frame-by-Frame Breakdown:</strong></div>
+          {rawData.executive_verification && (
+            <div>
+              <strong>Executive Authorization:</strong> <strong style={{ color: rawData.executive_verification.authorized ? 'var(--fg-primary)' : 'var(--fg-error)' }}>{rawData.executive_verification.status}</strong>
+              <span style={{ color: 'var(--fg-muted)' }}> — Cross-checked claimed name against SEBI Trust Chain.</span>
+            </div>
+          )}
+          <div><strong>Segment Breakdown:</strong></div>
           <ul style={{ paddingLeft: '20px', lineHeight: '1.5', maxHeight: '150px', overflowY: 'auto', background: 'rgba(255,255,255,0.05)', padding: '10px' }}>
-            {rawData.per_face_results && rawData.per_face_results.map((res, i) => (
+            {rawData.per_segment_results && rawData.per_segment_results.map((res, i) => (
               <li key={i}>
-                Frame {i + 1}: <strong style={{ color: (res.label || '').toUpperCase() === 'FAKE' ? 'var(--fg-error)' : 'var(--fg-primary)' }}>{res.label}</strong> ({(res.fake_probability * 100).toFixed(1)}% confident)
+                Segment {i + 1}: <strong style={{ color: (res.label || '').toUpperCase() === 'FAKE' ? 'var(--fg-error)' : 'var(--fg-primary)' }}>{res.label}</strong> ({(res.fake_probability * 100).toFixed(1)}% confident)
               </li>
             ))}
           </ul>
@@ -328,17 +347,23 @@ function App() {
       );
     }
 
-    if (context === 'voice') {
+    if (context === 'vision') {
       return (
         <div className="flex-col gap-sm">
           <div>
-            <strong>Summary:</strong> Analyzed {rawData.num_segments_analyzed} audio segments for synthetic frequencies.
+            <strong>Summary:</strong> Analyzed {rawData.num_faces_analyzed} face(s) across {rawData.num_frames_sampled} frames.
           </div>
-          <div><strong>Segment Breakdown:</strong></div>
+          {rawData.executive_verification && (
+            <div>
+              <strong>Executive Authorization:</strong> <strong style={{ color: rawData.executive_verification.authorized ? 'var(--fg-primary)' : 'var(--fg-error)' }}>{rawData.executive_verification.status}</strong>
+              <span style={{ color: 'var(--fg-muted)' }}> — Cross-checked claimed name against SEBI Trust Chain.</span>
+            </div>
+          )}
+          <div><strong>Frame-by-Frame Breakdown:</strong></div>
           <ul style={{ paddingLeft: '20px', lineHeight: '1.5', maxHeight: '150px', overflowY: 'auto', background: 'rgba(255,255,255,0.05)', padding: '10px' }}>
-            {rawData.per_segment_results && rawData.per_segment_results.map((res, i) => (
+            {rawData.per_face_results && rawData.per_face_results.map((res, i) => (
               <li key={i}>
-                Segment {i + 1}: <strong style={{ color: (res.label || '').toUpperCase() === 'FAKE' ? 'var(--fg-error)' : 'var(--fg-primary)' }}>{res.label}</strong> ({(res.fake_probability * 100).toFixed(1)}% confident)
+                Frame {i + 1}: <strong style={{ color: (res.label || '').toUpperCase() === 'FAKE' ? 'var(--fg-error)' : 'var(--fg-primary)' }}>{res.label}</strong> ({(res.fake_probability * 100).toFixed(1)}% confident)
               </li>
             ))}
           </ul>
@@ -386,24 +411,24 @@ function App() {
         {currentView === 'home' ? (
           <div className="home-grid">
              <div className="home-card" onClick={() => handleSelectModule('mail')}>
-               <h2>Check if this email is a scam</h2>
-               <p>NUNM.AI Mail</p>
+               <h2 className="default-text">NUNM.AI MAIL</h2>
+               <p className="hover-text">Check if this email is a scam</p>
              </div>
              <div className="home-card" onClick={() => handleSelectModule('vision')}>
-               <h2>Check if this video is fake</h2>
-               <p>NUNM.AI Vision</p>
+               <h2 className="default-text">NUNM.AI VISION</h2>
+               <p className="hover-text">Check if this video is fake</p>
              </div>
              <div className="home-card" onClick={() => handleSelectModule('voice')}>
-               <h2>Check if this voice call is real</h2>
-               <p>NUNM.AI Voice</p>
+               <h2 className="default-text">NUNM.AI VOICE</h2>
+               <p className="hover-text">Check if this voice call is real</p>
              </div>
              <div className="home-card" onClick={() => handleSelectModule('social')}>
-               <h2>Check if this social post is manipulated</h2>
-               <p>NUNM.AI Social</p>
+               <h2 className="default-text">NUNM.AI SOCIAL</h2>
+               <p className="hover-text">Check if this social post is manipulated</p>
              </div>
              <div className="home-card" onClick={handleVerifyAll} style={{ borderColor: 'var(--fg-secondary)' }}>
-               <h2 style={{ color: 'var(--fg-secondary)' }}>Generate unified threat report</h2>
-               <p>NUNM.AI Verify</p>
+               <h2 className="default-text" style={{ color: 'var(--fg-secondary)' }}>NUNM.AI VERIFY</h2>
+               <p className="hover-text" style={{ color: 'var(--fg-secondary)' }}>Generate unified threat report</p>
              </div>
           </div>
         ) : currentView === 'ingest' ? (
@@ -536,8 +561,20 @@ function App() {
               ))}
               <div ref={terminalEndRef} style={{ height: '1px' }} />
             </div>
-            {/* Kept a small input just for the hacker aesthetic, though not functional for tasks */}
-            <TerminalInput prompt={`guest@nunm.ai:~$`} onSubmit={(cmd) => logToTerminal(`${cmd}`, 'user')} />
+            
+            <div className="flex-row gap-md" style={{ alignItems: 'center' }}>
+              <button 
+                className="friendly-button" 
+                style={{ padding: '5px 10px', fontSize: '0.8rem', width: 'auto' }} 
+                onClick={exportLogsToJSON}
+              >
+                Export Logs (JSON)
+              </button>
+              <div style={{ flex: 1 }}>
+                {/* Kept a small input just for the hacker aesthetic, though not functional for tasks */}
+                <TerminalInput prompt={`guest@nunm.ai:~$`} onSubmit={(cmd) => logToTerminal(`${cmd}`, 'user')} />
+              </div>
+            </div>
           </div>
         </WindowPane>
       </div>

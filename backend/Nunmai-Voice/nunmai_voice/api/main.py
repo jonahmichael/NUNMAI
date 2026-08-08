@@ -17,9 +17,10 @@ Then visit http://127.0.0.1:8002/docs for interactive API documentation.
 import sys
 import tempfile
 import os
+import sqlite3
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
@@ -51,6 +52,7 @@ class AudioScanResponse(BaseModel):
     prediction: str
     num_segments_analyzed: int
     per_segment_results: list[PerSegmentResult]
+    executive_verification: dict | None = None
 
 
 @app.get("/")
@@ -59,7 +61,10 @@ def root():
 
 
 @app.post("/scan-audio", response_model=AudioScanResponse)
-async def scan_audio(file: UploadFile = File(...)):
+async def scan_audio(
+    file: UploadFile = File(...),
+    claimed_speaker_name: str | None = Form(None)
+):
     """
     Main endpoint: upload an audio file, get back a synthetic-voice verdict.
     """
@@ -97,5 +102,31 @@ async def scan_audio(file: UploadFile = File(...)):
             status_code=422,
             detail="No usable audio detected in the uploaded file.",
         )
+
+    # Cross-check claimed speaker against Verify DB
+    executive_verification = None
+    if claimed_speaker_name:
+        db_path = Path(__file__).resolve().parents[3] / "Nunmai-Verify" / "data" / "registry.db"
+        if db_path.exists():
+            conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                "SELECT e.entity_name FROM entity_executives ex JOIN entities e ON ex.entity_id = e.id WHERE ex.executive_name = ?",
+                (claimed_speaker_name.strip(),)
+            ).fetchone()
+            conn.close()
+            
+            if row:
+                executive_verification = {
+                    "authorized": True,
+                    "status": f"PASSED (Authorized under {row['entity_name']})"
+                }
+            else:
+                executive_verification = {
+                    "authorized": False,
+                    "status": "FAILED (Not an authorized executive)"
+                }
+    
+    result["executive_verification"] = executive_verification
 
     return result

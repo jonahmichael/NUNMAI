@@ -90,6 +90,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   min-height: 180px;
+  position: relative;
 }
 
 .home-card:hover {
@@ -99,16 +100,34 @@
   transform: translateY(-2px);
 }
 
-.home-card h2 {
-  font-size: 1.4rem;
-  margin-bottom: 10px;
-  color: var(--fg-primary);
-  text-transform: none; /* Friendlier font */
+.home-card .default-text,
+.home-card .hover-text {
+  position: absolute;
+  transition: opacity 0.3s ease;
+  width: 100%;
+  padding: 0 20px;
 }
 
-.home-card p {
+.home-card h2.default-text {
+  font-size: 1.4rem;
+  color: var(--fg-primary);
+  text-transform: none; /* Friendlier font */
+  opacity: 1;
+}
+
+.home-card p.hover-text {
   color: var(--fg-secondary);
-  font-size: 0.9rem;
+  font-size: 1.1rem;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.home-card:hover h2.default-text {
+  opacity: 0;
+}
+
+.home-card:hover p.hover-text {
+  opacity: 1;
 }
 
 .verdict-banner {

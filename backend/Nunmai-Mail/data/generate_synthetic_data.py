@@ -610,6 +610,50 @@ def _legit_long_onboarding_welcome(entity_name, real_domain):
     )
     return subject, body, raw, "Clean: LONG genuine onboarding email, matching domain, auth pass"
 
+
+def _phish_sebi_show_cause_notice(entity_name, real_domain):
+    """SEBI-specific: Urgent Show Cause Notice phishing scam."""
+    victim = _random_person()
+    url = _random_fake_url("SEBI", "sebi.gov.in", style="typosquat")
+    subject = f"URGENT: SEBI Show Cause Notice - Account Suspension"
+    body = (
+        f"Dear {victim},\n\n"
+        f"This is a formal Show Cause Notice issued by the Securities and Exchange Board of India (SEBI). "
+        f"We have detected illegal trading activities in your associated demat account.\n\n"
+        f"You are required to submit an explanation within 24 hours to prevent immediate freezing "
+        f"of all your trading accounts and assets. Failure to comply will result in an immediate penalty of {random.choice(AMOUNTS_INR)}.\n\n"
+        f"Click here to view the evidence and submit your response: {url}\n\n"
+        f"SEBI Enforcement Directorate"
+    )
+    from_domain = _make_typosquat_domain("sebi.gov.in")
+    raw = _build_raw_email_source(
+        from_name="SEBI Enforcement Directorate", from_addr=f"enforcement@{from_domain}",
+        subject=subject, body=body, spf="fail", dkim="fail", dmarc="fail",
+    )
+    return subject, body, raw, "Injected: SEBI show cause notice, urgency+financial combo, typosquat URL"
+
+
+def _phish_sebi_investor_grievance(entity_name, real_domain):
+    """SEBI-specific: Fake Investor Grievance Redressal phishing scam."""
+    victim = _random_person()
+    url = _random_fake_url("SEBI", "sebi.gov.in", style="ip_address")
+    subject = "SEBI SCORES - Action Required on your Grievance"
+    body = (
+        f"Dear {victim},\n\n"
+        f"Your investor grievance filed with SEBI SCORES requires additional verification "
+        f"before we can process your refund of {random.choice(AMOUNTS_INR)}.\n\n"
+        f"Please log in to the secure SEBI portal via the IP provided below to verify your bank account details.\n\n"
+        f"Login: {url}\n\n"
+        f"Note: This link is valid for 48 hours. If verification is not completed, your grievance will be closed.\n\n"
+        f"Regards,\nSEBI Investor Grievance Cell"
+    )
+    from_domain = random.choice(FREE_EMAIL_DOMAINS)
+    raw = _build_raw_email_source(
+        from_name="SEBI Investor Grievance Cell", from_addr=f"sebi.scores.redressal@{from_domain}",
+        subject=subject, body=body, spf="fail", dkim="none", dmarc="fail",
+    )
+    return subject, body, raw, "Injected: SEBI grievance refund scam, IP URL, free-email sender"
+
 PHISHING_TEMPLATES = {
     "phish_kyc_expiry": _phish_kyc_expiry,
     "phish_bec_wire_transfer": _phish_bec_wire_transfer,
@@ -623,6 +667,8 @@ PHISHING_TEMPLATES = {
     "phish_short_password_reset": _phish_short_password_reset,
     "phish_medium_job_scam": _phish_medium_job_scam,
     "phish_short_dividend_alert": _phish_short_dividend_alert,
+    "phish_sebi_show_cause_notice": _phish_sebi_show_cause_notice,
+    "phish_sebi_investor_grievance": _phish_sebi_investor_grievance,
 }
 
 

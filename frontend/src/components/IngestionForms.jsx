@@ -75,6 +75,7 @@ export const MailForm = ({ onSubmit, isScanning, activeVerdict }) => {
 export const VisionVoiceForm = ({ type, onSubmit, isScanning }) => {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [speakerName, setSpeakerName] = useState('');
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -151,9 +152,17 @@ export const VisionVoiceForm = ({ type, onSubmit, isScanning }) => {
         </div>
       </ScannerFrame>
 
+      <input 
+        type="text" 
+        className="friendly-input" 
+        placeholder="Claimed Speaker Name (Optional - e.g. Madhabi Puri Buch)" 
+        value={speakerName} 
+        onChange={e => setSpeakerName(e.target.value)} 
+      />
+
       <button 
         className="friendly-button"
-        onClick={() => onSubmit({ file })}
+        onClick={() => onSubmit({ file, claimed_speaker_name: speakerName })}
         disabled={isScanning || !file}
       >
         {buttonText}
