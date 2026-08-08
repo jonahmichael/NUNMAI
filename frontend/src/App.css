@@ -42,6 +42,9 @@
 
 .console-pane {
   grid-area: console;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Utilities for flex layouts inside panes */

@@ -80,7 +80,8 @@ export const VisionVoiceForm = ({ type, onSubmit, isScanning }) => {
     if (e.target.files && e.target.files[0]) {
       const selected = e.target.files[0];
       setFile(selected);
-      if (type === 'VISION' && selected.type.startsWith('video/')) {
+      // Create preview for both Video and Audio
+      if (selected.type.startsWith('video/') || selected.type.startsWith('audio/') || type === 'VOICE') {
         setPreviewUrl(URL.createObjectURL(selected));
       }
     }
@@ -104,7 +105,7 @@ export const VisionVoiceForm = ({ type, onSubmit, isScanning }) => {
       
       <ScannerFrame isScanning={isScanning}>
         <div style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '200px', width: '100%', position: 'relative', justifyContent: 'center', alignItems: 'center' }}>
-          {previewUrl ? (
+          {previewUrl && type === 'VISION' ? (
             <video 
               src={previewUrl} 
               autoPlay 
@@ -112,13 +113,37 @@ export const VisionVoiceForm = ({ type, onSubmit, isScanning }) => {
               muted 
               style={{ width: '100%', height: '100%', objectFit: 'contain', opacity: 0.5 }}
             />
+          ) : previewUrl && type === 'VOICE' ? (
+             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%', justifyContent: 'center' }}>
+                <style>{`
+                  @keyframes audioWave {
+                    0% { height: 10px; opacity: 0.5; }
+                    100% { height: 60px; opacity: 1; }
+                  }
+                  .wave-bar {
+                    width: 6px;
+                    background: var(--fg-primary);
+                    border-radius: 3px;
+                    animation: audioWave 0.5s infinite ease-in-out alternate;
+                  }
+                `}</style>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', height: '70px', marginBottom: '10px' }}>
+                  {[0.4, 0.7, 0.5, 0.9, 0.3, 0.8, 0.6, 0.9, 0.5, 0.7, 0.4].map((duration, idx) => (
+                    <div key={idx} className="wave-bar" style={{ animationDuration: `${duration}s` }} />
+                  ))}
+                </div>
+                <div style={{ color: 'var(--fg-secondary)', fontSize: '0.9rem', marginBottom: '10px' }}>
+                  {file.name}
+                </div>
+                <audio src={previewUrl} controls style={{ height: '30px', width: '250px' }} />
+             </div>
           ) : (
             <label style={{ cursor: 'pointer', color: 'var(--fg-primary)', textAlign: 'center', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <input type="file" accept={type === 'VISION' ? 'video/*' : 'audio/*'} style={{ display: 'none' }} onChange={handleFileChange} />
               {file ? `File Selected: ${file.name}` : `Click to Browse & Upload`}
             </label>
           )}
-          {previewUrl && (
+          {previewUrl && type === 'VISION' && (
             <div style={{ position: 'absolute', background: 'rgba(0,0,0,0.7)', padding: '5px' }}>
               {file.name}
             </div>

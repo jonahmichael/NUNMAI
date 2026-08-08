@@ -112,12 +112,15 @@ function App() {
 
       let stepIdx = 0;
       const steps = narrativeSteps[module];
+      let fallbackPrinted = false;
+      
       const loadingInterval = setInterval(() => {
         if(stepIdx < steps.length) {
             logToTerminal(`${steps[stepIdx]}`);
             stepIdx++;
-        } else {
+        } else if (!fallbackPrinted) {
             logToTerminal(`Finalizing multi-layered AI analysis...`);
+            fallbackPrinted = true;
         }
       }, 2500);
 
@@ -135,32 +138,37 @@ function App() {
       const riskTier = data.risk_tier || data.fused_risk_score;
       logToTerminal(`Analysis complete.`);
       
+      // Print the detailed metrics to the terminal so the user can inspect them
+      if (module !== 'MAIL') {
+         logToTerminal(`[RAW METRICS] ${JSON.stringify(data, null, 2)}`);
+      }
+      
       // Determine Plain English Verdict
-      let verdictObj = { text: "", type: "verdict-green" };
+      let verdictObj = { text: "", type: "verdict-green", rawData: data };
       
       if (module === 'MAIL') {
-          if (riskTier === 'PHISHING') { verdictObj = { text: "This email shows strong signs of being a phishing scam.", type: "verdict-red" }; }
-          else if (riskTier === 'SUSPICIOUS') { verdictObj = { text: "This email looks suspicious. Proceed with caution.", type: "verdict-yellow" }; }
-          else { verdictObj = { text: "This email appears to be safe and authentic.", type: "verdict-green" }; }
+          if (riskTier === 'PHISHING') { verdictObj.text = "This email shows strong signs of being a phishing scam."; verdictObj.type = "verdict-red"; }
+          else if (riskTier === 'SUSPICIOUS') { verdictObj.text = "This email looks suspicious. Proceed with caution."; verdictObj.type = "verdict-yellow"; }
+          else { verdictObj.text = "This email appears to be safe and authentic."; verdictObj.type = "verdict-green"; }
           
           verdictObj.riskSignals = data.top_risk_signals || [];
           verdictObj.trustSignals = data.top_trust_signals || [];
           verdictObj.textMatches = data.text_matches || {};
       } 
       else if (module === 'VISION') {
-          if (riskTier === 'DEEPFAKE') { verdictObj = { text: "This video shows strong evidence of AI manipulation (Deepfake).", type: "verdict-red" }; }
-          else if (riskTier === 'SUSPICIOUS') { verdictObj = { text: "This video has suspicious artifacts. It may be manipulated.", type: "verdict-yellow" }; }
-          else { verdictObj = { text: "This video appears to be an authentic recording.", type: "verdict-green" }; }
+          if (riskTier === 'DEEPFAKE') { verdictObj.text = "This video shows strong evidence of AI manipulation (Deepfake)."; verdictObj.type = "verdict-red"; }
+          else if (riskTier === 'SUSPICIOUS') { verdictObj.text = "This video has suspicious artifacts. It may be manipulated."; verdictObj.type = "verdict-yellow"; }
+          else { verdictObj.text = "This video appears to be an authentic recording."; verdictObj.type = "verdict-green"; }
       }
       else if (module === 'VOICE') {
-          if (riskTier === 'DEEPFAKE' || riskTier === 'SYNTHETIC') { verdictObj = { text: "This voice recording appears to be AI-generated or cloned.", type: "verdict-red" }; }
-          else if (riskTier === 'SUSPICIOUS') { verdictObj = { text: "This voice recording has unnatural audio signatures.", type: "verdict-yellow" }; }
-          else { verdictObj = { text: "This voice recording appears to be human and authentic.", type: "verdict-green" }; }
+          if (riskTier === 'DEEPFAKE' || riskTier === 'SYNTHETIC') { verdictObj.text = "This voice recording appears to be AI-generated or cloned."; verdictObj.type = "verdict-red"; }
+          else if (riskTier === 'SUSPICIOUS') { verdictObj.text = "This voice recording has unnatural audio signatures."; verdictObj.type = "verdict-yellow"; }
+          else { verdictObj.text = "This voice recording appears to be human and authentic."; verdictObj.type = "verdict-green"; }
       }
       else if (module === 'SOCIAL') {
-          if (riskTier === 'HIGH_RISK') { verdictObj = { text: "This account or post shows strong signs of being a malicious bot.", type: "verdict-red" }; }
-          else if (riskTier === 'SUSPICIOUS') { verdictObj = { text: "This post exhibits suspicious, coordinated behavior.", type: "verdict-yellow" }; }
-          else { verdictObj = { text: "This post appears to be from a genuine user.", type: "verdict-green" }; }
+          if (riskTier === 'HIGH_RISK') { verdictObj.text = "This account or post shows strong signs of being a malicious bot."; verdictObj.type = "verdict-red"; }
+          else if (riskTier === 'SUSPICIOUS') { verdictObj.text = "This post exhibits suspicious, coordinated behavior."; verdictObj.type = "verdict-yellow"; }
+          else { verdictObj.text = "This post appears to be from a genuine user."; verdictObj.type = "verdict-green"; }
       }
 
       setActiveVerdict(verdictObj);
@@ -261,6 +269,87 @@ function App() {
     return clean.charAt(0).toUpperCase() + clean.slice(1) + matchedWordsStr;
   };
 
+  const renderHumanReadableMetrics = (context, rawData) => {
+    if (!rawData) return null;
+
+    if (context === 'mail') {
+      return (
+        <ul style={{ paddingLeft: '20px', lineHeight: '1.8' }}>
+          <li>
+            <strong>Phishing Probability:</strong> {rawData.phishing_probability !== undefined ? (rawData.phishing_probability * 100).toFixed(1) : 'N/A'}% 
+            <span style={{ color: 'var(--fg-muted)' }}> — Overall confidence that this email is a malicious phishing attempt.</span>
+          </li>
+          {rawData.sender_verification && (
+            <li>
+              <strong>Sender Authentication:</strong> <strong style={{ color: rawData.sender_verification.all_passed ? 'var(--fg-primary)' : 'var(--fg-error)' }}>{rawData.sender_verification.all_passed ? 'PASSED (Cryptographically Verified)' : 'FAILED (Spoofing Likely)'}</strong>
+              <span style={{ color: 'var(--fg-muted)' }}> — Checks SPF, DKIM, and DMARC records to verify the sender's true identity.</span>
+            </li>
+          )}
+        </ul>
+      );
+    }
+
+    if (context === 'social') {
+      return (
+        <ul style={{ paddingLeft: '20px', lineHeight: '1.8' }}>
+          <li>
+            <strong>Text Analysis Score:</strong> {rawData.text_risk_score !== undefined ? (rawData.text_risk_score * 100).toFixed(1) : 'N/A'}% 
+            <span style={{ color: 'var(--fg-muted)' }}> — Evaluates the language for manipulative financial hype or bot-like patterns.</span>
+          </li>
+          {rawData.image_applicable && (
+            <li>
+              <strong>Image Analysis Score:</strong> {rawData.image_risk_score !== undefined ? (rawData.image_risk_score * 100).toFixed(1) : 'N/A'}% 
+              <span style={{ color: 'var(--fg-muted)' }}> — Checks attached images for deepfake or GAN blending artifacts.</span>
+            </li>
+          )}
+          <li>
+            <strong>Behavioral Risk Score:</strong> {rawData.behavioral_risk_score !== undefined ? (rawData.behavioral_risk_score * 100).toFixed(1) : 'N/A'}% 
+            <span style={{ color: 'var(--fg-muted)' }}> — Analyzes account history, follower ratio, and unusual posting frequency.</span>
+          </li>
+        </ul>
+      );
+    }
+    
+    if (context === 'vision') {
+      return (
+        <div className="flex-col gap-sm">
+          <div>
+            <strong>Summary:</strong> Analyzed {rawData.num_faces_analyzed} face(s) across {rawData.num_frames_sampled} frames.
+          </div>
+          <div><strong>Frame-by-Frame Breakdown:</strong></div>
+          <ul style={{ paddingLeft: '20px', lineHeight: '1.5', maxHeight: '150px', overflowY: 'auto', background: 'rgba(255,255,255,0.05)', padding: '10px' }}>
+            {rawData.per_face_results && rawData.per_face_results.map((res, i) => (
+              <li key={i}>
+                Frame {i + 1}: <strong style={{ color: (res.label || '').toUpperCase() === 'FAKE' ? 'var(--fg-error)' : 'var(--fg-primary)' }}>{res.label}</strong> ({(res.fake_probability * 100).toFixed(1)}% confident)
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+
+    if (context === 'voice') {
+      return (
+        <div className="flex-col gap-sm">
+          <div>
+            <strong>Summary:</strong> Analyzed {rawData.num_segments_analyzed} audio segments for synthetic frequencies.
+          </div>
+          <div><strong>Segment Breakdown:</strong></div>
+          <ul style={{ paddingLeft: '20px', lineHeight: '1.5', maxHeight: '150px', overflowY: 'auto', background: 'rgba(255,255,255,0.05)', padding: '10px' }}>
+            {rawData.per_segment_results && rawData.per_segment_results.map((res, i) => (
+              <li key={i}>
+                Segment {i + 1}: <strong style={{ color: (res.label || '').toUpperCase() === 'FAKE' ? 'var(--fg-error)' : 'var(--fg-primary)' }}>{res.label}</strong> ({(res.fake_probability * 100).toFixed(1)}% confident)
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+
+    // Fallback if not mapped
+    return <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}>{JSON.stringify(rawData, null, 2)}</pre>;
+  };
+
   const renderActiveForm = () => {
     switch (activeContext) {
       case 'mail': return <MailForm onSubmit={processIngestion} isScanning={isScanning} activeVerdict={activeVerdict} />;
@@ -358,6 +447,31 @@ function App() {
                       <li>No strong cryptographic trust signals found.</li>
                     )}
                   </ul>
+                </WindowPane>
+              </div>
+            )}
+
+            {/* NEW: Detailed Metrics Box for Non-Mail modules */}
+            {activeVerdict && activeVerdict.rawData && (
+              <div style={{ marginBottom: '10px' }}>
+                <WindowPane title="AI CONFIDENCE METRICS" style={{ borderColor: 'var(--fg-secondary)' }}>
+                  <div className="flex-col gap-sm">
+                    {/* Overall Confidence (if available) */}
+                    {(activeVerdict.rawData.fake_probability !== undefined || activeVerdict.rawData.fused_risk_score !== undefined || activeVerdict.rawData.phishing_probability !== undefined) && (
+                      <div style={{ fontSize: '1.2rem', color: 'var(--fg-error)', marginBottom: '10px' }}>
+                        <strong>Overall Probability of AI Manipulation / Phishing: </strong>
+                        {((activeVerdict.rawData.fake_probability ?? activeVerdict.rawData.fused_risk_score ?? activeVerdict.rawData.phishing_probability) * 100).toFixed(2)}%
+                      </div>
+                    )}
+                    
+                    {/* Scrollable details for laymen/judges */}
+                    <div style={{ fontSize: '0.9rem', color: 'var(--fg-secondary)', marginBottom: '5px' }}>
+                      Detailed Analysis Outputs (Scrollable)
+                    </div>
+                    <div style={{ border: '1px solid var(--border-color)', padding: '10px', height: 'auto', maxHeight: '300px', overflowY: 'auto', background: '#000', color: 'var(--fg-primary)', fontSize: '0.85rem' }}>
+                      {renderHumanReadableMetrics(activeContext, activeVerdict.rawData)}
+                    </div>
+                  </div>
                 </WindowPane>
               </div>
             )}
