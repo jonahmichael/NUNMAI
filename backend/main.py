@@ -79,4 +79,5 @@ async def reverse_proxy(request: Request, service_name: str, path: str):
 if __name__ == "__main__":
     import uvicorn
     print("Starting NUNM.AI API Gateway Proxy on port 8080...")
-    uvicorn.run(app, host="127.0.0.1", port=8080)
+    # Bind to 0.0.0.0 so it can be accessed externally when hosted
+    uvicorn.run(app, host="0.0.0.0", port=8080)

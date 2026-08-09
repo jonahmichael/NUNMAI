@@ -71,7 +71,8 @@ function App() {
     
     logToTerminal(`Initializing secure connection to API Gateway...`);
     
-    let endpoint = 'http://localhost:8080';
+    // Use environment variable for the API Gateway URL if hosted, else default to localhost
+    let endpoint = import.meta.env.VITE_API_URL || 'http://localhost:8080';
     let options = { method: 'POST' };
 
     try {
