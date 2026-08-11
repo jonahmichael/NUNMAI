@@ -68,6 +68,35 @@ chmod +x start_all.sh
 
 *(Note: The API Gateway binds to `0.0.0.0:8080`, so ensure Port 8080 is open in your cloud firewall).*
 
+**Manual Start (Terminal by Terminal):**
+If you prefer not to use the automated scripts, you can run each service manually in its own terminal. *You must navigate into each module's respective directory before running uvicorn.*
+
+Terminal 1 (Mail):
+```bash
+cd backend/Nunmai-Mail
+../.venv/Scripts/uvicorn.exe nunmai_mail.api.main:app --port 8000
+```
+Terminal 2 (Vision):
+```bash
+cd backend/Nunmai-Vision
+../.venv/Scripts/uvicorn.exe nunmai_vision.api.main:app --port 8001
+```
+Terminal 3 (Voice):
+```bash
+cd backend/Nunmai-Voice
+../.venv/Scripts/uvicorn.exe nunmai_voice.api.main:app --port 8002
+```
+Terminal 4 (Social):
+```bash
+cd backend/Nunmai-Social
+../.venv/Scripts/uvicorn.exe nunmai_social.api.main:app --port 8003
+```
+Terminal 5 (API Gateway):
+```bash
+cd backend
+./.venv/Scripts/python.exe main.py
+```
+
 ### 2. Frontend (React UI)
 The frontend is built using React 18 and Vite.
 
